@@ -25,7 +25,11 @@ class Importer extends \yii\base\Widget {
     private function import() {
         $feeds = Webcrawler::find()->all();
         $rssUserId = User::find()->where("username = 'SOLCITY_RSS_CRAWLER'")->one()->userId;
-        $runNumber = WebcrawlerImportLog::findOne(['runNumber' => '(SELECT MAX(runNumber) from sc_webcrawler_import_log)'])->runNumber;
+        $runNumberRecord = WebcrawlerImportLog::findOne(['runNumber' => '(SELECT MAX(runNumber) from sc_webcrawler_import_log)']);
+        $runNumber = 1;
+        if (!is_null($runNumberRecord)) {
+            $runNumber = $runNumberRecord->runNumber + 1;
+        }
         
         foreach ($feeds as $feed) {
             $rssFeed = RSS_Get_Custom($feed->link);
