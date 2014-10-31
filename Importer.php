@@ -39,7 +39,7 @@ class Importer extends \yii\base\Widget {
                     'released' => 0
                 ]);
                 
-                $log = new WebcrawlerImportLog(['webcrawlerId' => $rssFeed->webcrawlerId]);
+                $log = new WebcrawlerImportLog(['webcrawlerId' => $feed->webcrawlerId]);
                 if ($article->save(false)) {
                     $log->articleId = $article->articleId;
                 } else {
