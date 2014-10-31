@@ -25,6 +25,7 @@ class Importer extends \yii\base\Widget {
     private function import() {
         $feeds = Webcrawler::find()->all();
         $rssUserId = User::find()->where("username = 'SOLCITY_RSS_CRAWLER'")->one()->userId;
+        $runNumber = WebcrawlerImportLog::findOne(['runNumber' => '(SELECT MAX(runNumber) from sc_webcrawler_import_log)'])->runNumber;
         
         foreach ($feeds as $feed) {
             $rssFeed = RSS_Get_Custom($feed->link);
@@ -39,7 +40,7 @@ class Importer extends \yii\base\Widget {
                     'released' => 0
                 ]);
                 
-                $log = new WebcrawlerImportLog(['webcrawlerId' => $feed->webcrawlerId]);
+                $log = new WebcrawlerImportLog(['webcrawlerId' => $feed->webcrawlerId, 'runNumber' => $runNumber]);
                 $duplicateArticle = $article->duplicateByOriginlink;
                 if (!is_null($duplicateArticle)) {
                     $log->articleId = $duplicateArticle->articleId;
