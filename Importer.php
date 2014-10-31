@@ -4,6 +4,8 @@ namespace solcity\rssparser;
 
 use \app\models\User;
 use \app\models\Webcrawler;
+use \app\models\Article;
+use \app\models\WebcrawlerImportLog;
 
 require_once(__DIR__  . '/rsslib/rsslib.php');
 
@@ -21,15 +23,13 @@ class Importer extends \yii\base\Widget {
     }
     
     private function import() {
-        $importStates = array();
-        
         $feeds = Webcrawler::find()->all();
         $rssUserId = User::find()->where("username = 'SOLCITY_RSS_CRAWLER'")->one()->userId;
         
         foreach ($feeds as $feed) {
             $rssFeed = RSS_Get_Custom($feed->link);
             foreach ($rssFeed as $rssItem) {
-                $article = new \app\models\Article(array(
+                $article = new Article([
                     'title' => $rssItem['title'],
                     'article' => $rssItem['description'],
                     'originLink' => $rssItem['link'],
@@ -37,15 +37,17 @@ class Importer extends \yii\base\Widget {
                     'categoryId' => $feed->categoryId,
                     'subCategoryId' => $feed->subCategoryId,
                     'released' => 0
-                ));
+                ]);
                 
+                $log = new WebcrawlerImportLog(['webcrawlerId' => $rssFeed->webcrawlerId]);
                 if ($article->save(false)) {
-                    $importStates[$feed->webcrawlerId][$article->articleId] = true;
+                    $log->articleId = $article->articleId;
                 } else {
-                    $importStates[$feed->webcrawlerId][$article->articleId] = false;
+                    foreach ($article->errors as $error) $log->message .= $error . "\n";
                 }
+                $log->save();
             }
         }
-        return $importStates;
+        return true;
     }
 }
