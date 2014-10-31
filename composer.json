@@ -1,0 +1,21 @@
+{
+    "name": "solcity/yii2-rssparser",
+    "description": "parses rss feeds",
+    "type": "yii2-extension",
+    "keywords": ["yii2","extension"],
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "Dominique Helfer",
+            "email": "dominiquepascal.helfer@students.bfh.ch"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "solcity\\rssparser\\": ""
+        }
+    }
+}
