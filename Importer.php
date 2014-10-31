@@ -40,10 +40,18 @@ class Importer extends \yii\base\Widget {
                 ]);
                 
                 $log = new WebcrawlerImportLog(['webcrawlerId' => $feed->webcrawlerId]);
-                if ($article->save(false)) {
+                $duplicateArticle = $article->duplicateByOriginlink;
+                if (!is_null($duplicateArticle)) {
+                    $log->articleId = $duplicateArticle->articleId;
+                    $log->message = 'already imported';
+                } elseif ($article->save(false)) {
                     $log->articleId = $article->articleId;
                 } else {
-                    foreach ($article->errors as $error) $log->message .= $error . "\n";
+                    $log->message = '';
+                    foreach ($article->errors as $error){
+                        $log->message .= $error . "<br>";
+                    }
+                    $log->message = substr($log->message, -4);
                 }
                 $log->save();
             }
