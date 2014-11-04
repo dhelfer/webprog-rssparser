@@ -45,7 +45,7 @@ class Importer extends \yii\base\Widget {
                 ]);
                 
                 $log = new WebcrawlerImportLog(['webcrawlerId' => $feed->webcrawlerId, 'runNumber' => $runNumber]);
-                $duplicateArticle = $article->duplicateByOriginlink;
+                $duplicateArticle = $article->findDuplicateByOriginlink();
                 if (!is_null($duplicateArticle)) {
                     $log->articleId = $duplicateArticle->articleId;
                     $log->message = 'already imported';
