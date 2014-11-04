@@ -6,6 +6,7 @@ use \app\models\User;
 use \app\models\Webcrawler;
 use \app\models\Article;
 use \app\models\WebcrawlerImportLog;
+use \Yii;
 
 require_once(__DIR__  . '/rsslib/rsslib.php');
 
@@ -24,13 +25,14 @@ class Importer extends \yii\base\Widget {
     
     private function import() {
         $feeds = Webcrawler::find()->all();
-        $rssUserId = User::find()->where("username = 'SOLCITY_RSS_CRAWLER'")->one()->userId;
-        $runNumberRecord = \Yii::$app->db->createCommand()->setSql('SELECT MAX(runNumber) as runNumber from sc_webcrawler_import_log')->queryOne();
+        $rssUserId = User::find()->where("username = '" . Yii::$app->params['rssimport']['user'] . "'")->one()->userId;
+        $runNumberRecord = Yii::$app->db->createCommand()->setSql('SELECT MAX(runNumber) as runNumber from sc_webcrawler_import_log')->queryOne();
         $runNumber = 1;
         if (!is_null($runNumberRecord['runNumber'])) {
             $runNumber = $runNumberRecord['runNumber'] + 1;
         }
         
+        $result = ['feeds' => 0, 'articles' => 0];
         foreach ($feeds as $feed) {
             $rssFeed = RSS_Get_Custom($feed->link);
             foreach ($rssFeed as $rssItem) {
@@ -59,8 +61,10 @@ class Importer extends \yii\base\Widget {
                     $log->message = substr($log->message, -4);
                 }
                 $log->save();
+                $result['articles']++;
             }
+            $result['feeds']++;
         }
-        return true;
+        return $result;
     }
 }
