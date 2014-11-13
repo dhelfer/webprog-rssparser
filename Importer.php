@@ -8,8 +8,6 @@ use \app\models\Article;
 use \app\models\WebcrawlerImportLog;
 use \Yii;
 
-require_once(__DIR__  . '/rsslib/rsslib.php');
-
 class Importer extends \yii\base\Widget {
     public $options = [];
     
@@ -34,12 +32,12 @@ class Importer extends \yii\base\Widget {
         
         $result = ['feeds' => 0, 'articles' => 0];
         foreach ($feeds as $feed) {
-            $rssFeed = RSS_Get_Custom($feed->link);
-            foreach ($rssFeed as $rssItem) {
+            $rssFeed = simplexml_load_file($feed->link);
+            foreach ($rssFeed->channel->item as $rssItem) {
                 $article = new Article([
-                    'title' => $rssItem['title'],
-                    'article' => $rssItem['description'],
-                    'originLink' => $rssItem['link'],
+                    'title' => $rssItem->title,
+                    'article' => $rssItem->description,
+                    'originLink' => $rssItem->link,
                     'userId' => $rssUserId,
                     'categoryId' => $feed->categoryId,
                     'subCategoryId' => $feed->subCategoryId,
