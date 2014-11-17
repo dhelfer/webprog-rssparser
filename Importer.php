@@ -16,8 +16,11 @@ class Importer extends \yii\base\Widget {
     }
     
     public function run() {
-        if ($this->options['action'] == 'import') {
-            return json_encode($this->import());
+        $function = $this->options['action'];
+        if (isset($this->options['json']) && $this->options['json'] === true) {
+            return json_encode($this->$function());
+        } else {
+            return $this->$function();
         }
     }
     
@@ -35,14 +38,27 @@ class Importer extends \yii\base\Widget {
             $rssFeed = simplexml_load_file($feed->link);
             foreach ($rssFeed->channel->item as $rssItem) {
                 $article = new Article([
-                    'title' => $rssItem->title,
-                    'article' => $rssItem->description,
-                    'originLink' => $rssItem->link,
+                    'title' => (string)$rssItem->title,
+                    'article' => (string)$rssItem->description,
+                    'originLink' => (string)$rssItem->link,
                     'userId' => $rssUserId,
                     'categoryId' => $feed->categoryId,
                     'subCategoryId' => $feed->subCategoryId,
                     'released' => 0
                 ]);
+                
+                //assign here dynamic attributes from specialMapping
+                if (!is_null($feed->specialMapping) && strpos($feed->specialMapping, ';') !== false) {
+                    $specialMapping = explode('; ', $feed->specialMapping);
+                    foreach ($specialMapping as $sp) {
+                        if (strpos($sp, '=') !== false) {
+                            $attributes = explode('=', $sp);
+                            $articleAttribute = $attributes[0];
+                            $feedAttribute = $attributes[1];
+                            $article->$articleAttribute = $rssItem->$feedAttribute;
+                        }
+                    }
+                }
                 
                 $log = new WebcrawlerImportLog(['webcrawlerId' => $feed->webcrawlerId, 'runNumber' => $runNumber]);
                 $duplicateArticle = $article->findDuplicateByOriginlink();
@@ -64,5 +80,17 @@ class Importer extends \yii\base\Widget {
             $result['feeds']++;
         }
         return $result;
+    }
+    
+    public function getItemStructure() {
+        $rssFeed = simplexml_load_file($this->options['url']);
+        $item = $rssFeed->channel->item[0];
+        
+        $attributes = array();
+        foreach ((array)$item as $key => $value) {
+            $attributes[] = $key;
+        }
+        
+        return $attributes;
     }
 }
