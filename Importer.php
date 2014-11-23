@@ -25,7 +25,12 @@ class Importer extends \yii\base\Widget {
     }
     
     private function import() {
-        $feeds = Webcrawler::find()->all();
+        if (isset($this->options['webcrawlerId'])) {
+            $feeds = Webcrawler::find()->where(['webcrawlerId' => $this->options['webcrawlerId']])->all();
+        } else {
+            $feeds = Webcrawler::find()->all();
+        }
+        
         $rssUserId = User::find()->where("username = '" . Yii::$app->params['rssimport']['user'] . "'")->one()->userId;
         $runNumberRecord = Yii::$app->db->createCommand()->setSql('SELECT MAX(runNumber) as runNumber from sc_webcrawler_import_log')->queryOne();
         $runNumber = 1;
